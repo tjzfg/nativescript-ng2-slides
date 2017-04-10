@@ -64,6 +64,8 @@ export class SlidesComponent implements OnInit {
 	@Input('pageHeight') pageHeight: number;
 	@Input('loop') loop: boolean;
 	@Input('pageIndicators') pageIndicators: boolean;
+	@Input("autoInterval") interval:number=-1;
+	_intervalFun;
 
 	private transitioning: boolean;
 	private direction: direction = direction.none;
@@ -108,10 +110,13 @@ export class SlidesComponent implements OnInit {
 			this.positionSlides(this.currentSlide);
 			this.applySwipe(this.pageWidth);
 		}
+		if(this.interval>0){
+			this._intervalFun=setInterval(()=>this.nextSlide(),this.interval);
+		}
 	}
 
 	ngOnDestroy() {
-
+		if(this._intervalFun) clearInterval(this._intervalFun);
 	}
 
 	//footer stuff
@@ -124,13 +129,10 @@ export class SlidesComponent implements OnInit {
 		footerSection.horizontalAlignment = 'center';
 
 		if (app.ios) {
-<<<<<<< HEAD
 			footerSection.clipToBounds = false;
-=======
 		    footerSection.clipToBounds = false;
 		} else if (app.android) {
 			footerSection.android.getParent().setClipChildren(false);
->>>>>>> origin/master
 		}
 
 		footerSection.orientation = 'horizontal';
