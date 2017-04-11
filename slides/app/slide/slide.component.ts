@@ -6,7 +6,7 @@ import * as gestures from 'ui/gestures';
 @Component({
 	selector: 'slide',
 	template: `
-	<StackLayout #slideLayout [class]="cssClass">
+	<StackLayout #slideLayout [class]="cssClass" oriention="vertical">
 		<ng-content></ng-content>
 	</StackLayout>
 	`,

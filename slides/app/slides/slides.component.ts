@@ -9,6 +9,10 @@ import * as app from 'application';
 import { AbsoluteLayout } from 'ui/layouts/absolute-layout';
 import { StackLayout } from 'ui/layouts/stack-layout';
 import { Label } from 'ui/label';
+import trace=require("trace");
+import {ScrollView} from "ui/scroll-view";
+import {View} from "ui/core/view";
+import {PanResult} from "../PanResult";
 
 export interface IIndicators {
 	active: boolean;
@@ -50,7 +54,7 @@ enum cancellationReason {
 	styles: [`
 		.footer{
 			width:100%;
-			height:20%
+			height:20%;
 			horizontal-align:center;
 		}
 	`],
@@ -65,10 +69,11 @@ export class SlidesComponent implements OnInit {
 	@Input('loop') loop: boolean;
 	@Input('pageIndicators') pageIndicators: boolean;
 	@Input("autoInterval") interval:number=-1;
-	_intervalFun;
-
+	private _intervalFun;
+	private panResult=new PanResult();
 	private transitioning: boolean;
 	private direction: direction = direction.none;
+	private scroll:ScrollView;
 
 	indicators: IIndicators[];
 	currentSlide: ISlideMap;
@@ -81,7 +86,7 @@ export class SlidesComponent implements OnInit {
 		return !!this.currentSlide && !!this.currentSlide.left;
 	}
 
-	constructor(private ref: ChangeDetectorRef) {
+	constructor(private el:ElementRef,private ref: ChangeDetectorRef) {
 		this.indicators = [];
 	}
 
@@ -108,10 +113,28 @@ export class SlidesComponent implements OnInit {
 		}
 		if (this.currentSlide) {
 			this.positionSlides(this.currentSlide);
-			this.applySwipe(this.pageWidth);
 		}
 		if(this.interval>0){
-			this._intervalFun=setInterval(()=>this.nextSlide(),this.interval);
+			this._intervalFun=setInterval(()=>{
+				if(this.panResult.beginTime==0){
+					this.nextSlide()
+				}
+			},this.interval);
+		}
+		//todo ugly hack
+		let view:View=this.el.nativeElement;
+		while(view.parent){
+			view=view.parent;
+			if(view instanceof ScrollView && view.orientation=="vertical"){
+				this.scroll=view;
+				this.scroll.on('pan',this.onPan);
+				trace.write("slides is layout in a vertical scroll,found it","tns-ng2-slides");
+				break;
+			}
+		}
+		if(!this.scroll && this.currentSlide){
+			this.currentSlide.slide.layout.on('pan', this.onPan);
+			trace.write("slides is not layout in a vertical scroll","tns-ng2-slides");
 		}
 	}
 
@@ -162,13 +185,18 @@ export class SlidesComponent implements OnInit {
 		this.direction = direction.none;
 		this.transitioning = false;
 		this.currentSlide.slide.layout.off('pan');
+		if(this.scroll){
+			this.scroll.off('pan');
+		}
 		this.currentSlide = slide;
 
 		// sets up each slide so that they are positioned to transition either way.
 		this.positionSlides(this.currentSlide);
 
 		//if (this.disablePan === false) {
-		this.applySwipe(this.pageWidth);
+		if(!this.scroll){
+			this.currentSlide.slide.layout.on('pan', this.onPan);
+		}
 		//}
 
 		if (this.pageIndicators) {
@@ -234,129 +262,6 @@ export class SlidesComponent implements OnInit {
 
 	}
 
-	public applySwipe(pageWidth: number): void {
-		let previousDelta = -1; //hack to get around ios firing pan event after release
-		let endingVelocity = 0;
-		let startTime, deltaTime;
-
-		this.currentSlide.slide.layout.on('pan', (args: gestures.PanGestureEventData): void => {
-			if (args.state === gestures.GestureStateTypes.began) {
-				startTime = Date.now();
-				previousDelta = 0;
-				endingVelocity = 250;
-
-				//this.triggerStartEvent();
-			} else if (args.state === gestures.GestureStateTypes.ended) {
-				deltaTime = Date.now() - startTime;
-				// if velocityScrolling is enabled then calculate the velocitty
-
-				// swiping left to right.
-				if (args.deltaX > (pageWidth / 3)) {
-					if (this.hasPrevious) {
-						this.transitioning = true;
-						this.showLeftSlide(this.currentSlide, args.deltaX, endingVelocity).then(() => {
-							this.setupPanel(this.currentSlide.left);
-
-							//this.triggerChangeEventLeftToRight();
-						});
-					} else {
-						//We're at the start
-						//Notify no more slides
-						//this.triggerCancelEvent(cancellationReason.noPrevSlides);
-					}
-					return;
-				}
-				// swiping right to left
-				else if (args.deltaX < (-pageWidth / 3)) {
-					if (this.hasNext) {
-						this.transitioning = true;
-						this.showRightSlide(this.currentSlide, args.deltaX, endingVelocity).then(() => {
-							this.setupPanel(this.currentSlide.right);
-
-							// Notify changed
-							//this.triggerChangeEventRightToLeft();
-
-							if (!this.hasNext) {
-								// Notify finsihed
-								// this.notify({
-								// 	eventName: SlideContainer.FINISHED_EVENT,
-								// 	object: this
-								// });
-							}
-						});
-					} else {
-						// We're at the end
-						// Notify no more slides
-						//this.triggerCancelEvent(cancellationReason.noMoreSlides);
-					}
-					return;
-				}
-
-				if (this.transitioning === false) {
-					//Notify cancelled
-					//this.triggerCancelEvent(cancellationReason.user);
-					this.transitioning = true;
-					this.currentSlide.slide.layout.animate({
-						translate: { x: -this.pageWidth, y: 0 },
-						duration: 200,
-						curve: AnimationCurve.easeOut
-					});
-					if (this.hasNext) {
-						this.currentSlide.right.slide.layout.animate({
-							translate: { x: 0, y: 0 },
-							duration: 200,
-							curve: AnimationCurve.easeOut
-						});
-						if (app.ios) //for some reason i have to set these in ios or there is some sort of bounce back.
-							this.currentSlide.right.slide.layout.translateX = 0;
-					}
-					if (this.hasPrevious) {
-						this.currentSlide.left.slide.layout.animate({
-							translate: { x: -this.pageWidth * 2, y: 0 },
-							duration: 200,
-							curve: AnimationCurve.easeOut
-						});
-						if (app.ios)
-							this.currentSlide.left.slide.layout.translateX = -this.pageWidth;
-
-					}
-					if (app.ios)
-						this.currentSlide.slide.layout.translateX = -this.pageWidth;
-
-					this.transitioning = false;
-				}
-			} else {
-				if (!this.transitioning
-					&& previousDelta !== args.deltaX
-					&& args.deltaX != null
-					&& args.deltaX < 0) {
-
-					if (this.hasNext) {
-						this.direction = direction.left;
-						this.currentSlide.slide.layout.translateX = args.deltaX - this.pageWidth;
-						this.currentSlide.right.slide.layout.translateX = args.deltaX;
-
-					}
-				} else if (!this.transitioning
-					&& previousDelta !== args.deltaX
-					&& args.deltaX != null
-					&& args.deltaX > 0) {
-
-					if (this.hasPrevious) {
-						this.direction = direction.right;
-						this.currentSlide.slide.layout.translateX = args.deltaX - this.pageWidth;
-						this.currentSlide.left.slide.layout.translateX = -(this.pageWidth * 2) + args.deltaX;
-					}
-				}
-
-				if (args.deltaX !== 0) {
-					previousDelta = args.deltaX;
-				}
-
-			}
-		});
-	}
-
 	private buildSlideMap(slides: SlideComponent[]) {
 		this._slideMap = [];
 		slides.forEach((slide: SlideComponent, index: number) => {
@@ -408,4 +313,126 @@ export class SlidesComponent implements OnInit {
 			//this.triggerChangeEventLeftToRight();
 		});
 	}
+	private onPan=(args: gestures.PanGestureEventData): void => {
+		trace.write(`pan gesture occur:${args.state} on ${args.view}`,"tns-ng2-slides");
+		if (args.state === gestures.GestureStateTypes.began) {
+			this.panResult.beginTime=Date.now();
+			//this.triggerStartEvent();
+		} else if (args.state === gestures.GestureStateTypes.ended) {
+			this.panResult.setResult(args.deltaX,Date.now());
+			/*if(args.view===this.currentSlide.slide.layout && this.scroll){
+				this.scroll.on('pan',this.onPan);
+				this.currentSlide.slide.layout.off('pan');
+				return;
+			}*/
+			trace.write(`move total distance:${this.panResult.deltaX} on ${args.view}`,"tns-ng2-slides");
+			// if velocityScrolling is enabled then calculate the velocitty
+			// swiping left to right.
+			if (this.panResult.deltaX > (this.pageWidth / 4)) {
+				trace.write(`swipeLeft`,"tns-ng2-slides");
+				if (this.hasPrevious) {
+					this.transitioning = true;
+					this.showLeftSlide(this.currentSlide, args.deltaX, /*todo not used?*/0).then(() => {
+						this.setupPanel(this.currentSlide.left);
+
+						//this.triggerChangeEventLeftToRight();
+					});
+				} else {
+					//We're at the start
+					//Notify no more slides
+					//this.triggerCancelEvent(cancellationReason.noPrevSlides);
+				}
+				return;
+			}
+			// swiping right to left
+			else if (this.panResult.deltaX < (-this.pageWidth / 4)) {
+				trace.write("swipe right","tns-ng2-slides");
+				if (this.hasNext) {
+					this.transitioning = true;
+					this.showRightSlide(this.currentSlide, args.deltaX, /*todo not used?*/0).then(() => {
+						this.setupPanel(this.currentSlide.right);
+
+						// Notify changed
+						//this.triggerChangeEventRightToLeft();
+
+						if (!this.hasNext) {
+							// Notify finsihed
+							// this.notify({
+							// 	eventName: SlideContainer.FINISHED_EVENT,
+							// 	object: this
+							// });
+						}
+					});
+				} else {
+					// We're at the end
+					// Notify no more slides
+					//this.triggerCancelEvent(cancellationReason.noMoreSlides);
+				}
+				return;
+			}
+			trace.write("not swipe,restore","tns-ng2-slides");
+			if (this.transitioning === false) {
+				//Notify cancelled
+				//this.triggerCancelEvent(cancellationReason.user);
+				this.transitioning = true;
+				this.currentSlide.slide.layout.animate({
+					translate: { x: -this.pageWidth, y: 0 },
+					duration: 200,
+					curve: AnimationCurve.easeOut
+				});
+				if (this.hasNext) {
+					this.currentSlide.right.slide.layout.animate({
+						translate: { x: 0, y: 0 },
+						duration: 200,
+						curve: AnimationCurve.easeOut
+					});
+					if (app.ios) //for some reason i have to set these in ios or there is some sort of bounce back.
+						this.currentSlide.right.slide.layout.translateX = 0;
+				}
+				if (this.hasPrevious) {
+					this.currentSlide.left.slide.layout.animate({
+						translate: { x: -this.pageWidth * 2, y: 0 },
+						duration: 200,
+						curve: AnimationCurve.easeOut
+					});
+					if (app.ios)
+						this.currentSlide.left.slide.layout.translateX = -this.pageWidth;
+
+				}
+				if (app.ios)
+					this.currentSlide.slide.layout.translateX = -this.pageWidth;
+
+				this.transitioning = false;
+			}
+		} else {
+			//pan event resume? trace.write();
+			if (!this.transitioning
+				&& this.panResult.previousDeltaX !== args.deltaX
+				&& args.deltaX != null
+				&& args.deltaX < 0) {
+
+				if (this.hasNext) {
+					this.direction = direction.left;
+					this.currentSlide.slide.layout.translateX = args.deltaX - this.pageWidth;
+					this.currentSlide.right.slide.layout.translateX = args.deltaX;
+
+				}
+			} else if (!this.transitioning
+				&& this.panResult.previousDeltaX !== args.deltaX
+				&& args.deltaX != null
+				&& args.deltaX > 0) {
+
+				if (this.hasPrevious) {
+					this.direction = direction.right;
+					this.currentSlide.slide.layout.translateX = args.deltaX - this.pageWidth;
+					this.currentSlide.left.slide.layout.translateX = -(this.pageWidth * 2) + args.deltaX;
+				}
+			}
+
+			if (args.deltaX !== 0) {
+				this.panResult.previousDeltaX = args.deltaX;
+			}
+		}
+	};
+
 }
