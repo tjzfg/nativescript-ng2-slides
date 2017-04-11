@@ -15,10 +15,34 @@
 .slide-5{
   background-color: darkslategray;
 }
+Slide{
+  background-color:rebeccapurple;
+}
 Label{
   text-align: center;
   width: 100%;
   font-size: 35;
   margin-top: 35;
   color: #fff;
+}
+.slide-indicator-inactive{
+  background-color: #fff;
+  opacity : 0.4;
+  width : 10;
+  height : 10;
+  margin-left : 2.5;
+  margin-right : 2.5;
+  margin-top : 0;
+  border-radius : 5;
+}
+
+.slide-indicator-active{
+  background-color: #fff;
+  opacity : 0.9;
+  width : 10;
+  height : 10;
+  margin-left : 2.5;
+  margin-right : 2.5;
+  margin-top : 0;
+  border-radius : 5;
 }
