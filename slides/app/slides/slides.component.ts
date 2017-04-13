@@ -1,4 +1,7 @@
-import { Component, OnInit, AfterViewInit, ViewEncapsulation, ChangeDetectorRef, OnDestroy, forwardRef, ViewChild, ContentChildren, ElementRef, QueryList, Input } from '@angular/core';
+import {
+	Component, OnInit, AfterViewInit, ViewEncapsulation, ChangeDetectorRef, OnDestroy, forwardRef, ViewChild,
+	ContentChildren, ElementRef, QueryList, Input, AfterViewChecked
+} from '@angular/core';
 
 import { SlideComponent } from '../slide/slide.component';
 import * as gestures from 'ui/gestures';
@@ -13,6 +16,7 @@ import trace=require("trace");
 import {ScrollView} from "ui/scroll-view";
 import {View} from "ui/core/view";
 import {PanResult} from "../PanResult";
+import "rxjs/add/operator/toPromise";
 
 export interface IIndicators {
 	active: boolean;
@@ -61,8 +65,9 @@ enum cancellationReason {
 	encapsulation: ViewEncapsulation.None
 })
 
-export class SlidesComponent implements OnInit {
+export class SlidesComponent implements OnInit,OnDestroy{
 	@ContentChildren(forwardRef(() => SlideComponent)) slides: QueryList<SlideComponent>;
+
 	@ViewChild('footer') footer: ElementRef;
 	@Input('pageWidth') pageWidth: number;
 	@Input('pageHeight') pageHeight: number;
@@ -86,7 +91,7 @@ export class SlidesComponent implements OnInit {
 		return !!this.currentSlide && !!this.currentSlide.left;
 	}
 
-	constructor(private el:ElementRef,private ref: ChangeDetectorRef) {
+	constructor(private el:ElementRef,private ref: ChangeDetectorRef,private dete:ChangeDetectorRef) {
 		this.indicators = [];
 	}
 
@@ -95,32 +100,15 @@ export class SlidesComponent implements OnInit {
 		this.pageIndicators = this.pageIndicators ? this.pageIndicators : false;
 		this.pageWidth = this.pageWidth ? this.pageWidth : platform.screen.mainScreen.widthDIPs;
 		this.pageHeight = this.pageHeight ? this.pageHeight : platform.screen.mainScreen.heightDIPs;
+		//this.slides.changes.subscribe(val => console.log(this.slides.toArray()));
 	}
 
 	ngAfterViewInit() {
-		// loop through slides and setup height and widith
-		this.slides.forEach((slide: SlideComponent) => {
-			AbsoluteLayout.setLeft(slide.layout, this.pageWidth);
-			slide.slideWidth = this.pageWidth;
-			slide.slideHeight = this.pageHeight;
-		});
+		trace.write("view is initialized","tns-ng2-slides",1);
+		trace.write(`slides is ${this.slides.dirty?"":"not"} dirty`,"tns-ng2-slides",1);
 
-		this.currentSlide = this.buildSlideMap(this.slides.toArray());
+		this.slides.changes.subscribe(val => this.setupSlides());
 
-		if (this.pageIndicators) {
-			this.buildFooter(this.slides.length);
-			this.setActivePageIndicator(0);
-		}
-		if (this.currentSlide) {
-			this.positionSlides(this.currentSlide);
-		}
-		if(this.interval>0){
-			this._intervalFun=setInterval(()=>{
-				if(this.panResult.beginTime==0){
-					this.nextSlide()
-				}
-			},this.interval);
-		}
 		//todo ugly hack
 		let view:View=this.el.nativeElement;
 		while(view.parent){
@@ -132,9 +120,13 @@ export class SlidesComponent implements OnInit {
 				break;
 			}
 		}
-		if(!this.scroll && this.currentSlide){
-			this.currentSlide.slide.layout.on('pan', this.onPan);
-			trace.write("slides is not layout in a vertical scroll","tns-ng2-slides");
+		this.setupSlides();
+		if(this.interval>0){
+			this._intervalFun=setInterval(()=>{
+				if(this.panResult.beginTime==0){
+					this.nextSlide()
+				}
+			},this.interval);
 		}
 	}
 
@@ -159,14 +151,36 @@ export class SlidesComponent implements OnInit {
 		}
 
 		footerSection.orientation = 'horizontal';
-
+		this.indicators=[];
 		let index = 0;
 		while (index < pageCount) {
 			this.indicators.push({ active: false });
 			index++;
 		}
 	}
+	setupSlides(){
+		// loop through slides and setup height and widith
+		this.slides.forEach((slide: SlideComponent) => {
+			AbsoluteLayout.setLeft(slide.layout, this.pageWidth);
+			slide.slideWidth = this.pageWidth;
+			slide.slideHeight = this.pageHeight;
+		});
 
+		this.currentSlide = this.buildSlideMap(this.slides.toArray());
+
+		if (this.pageIndicators) {
+			this.buildFooter(this.slides.length);
+			this.setActivePageIndicator(0);
+		}
+		if (this.currentSlide) {
+			this.positionSlides(this.currentSlide);
+		}
+
+		if(!this.scroll && this.currentSlide){
+			this.currentSlide.slide.layout.on('pan', this.onPan);
+			trace.write("slides is not layout in a vertical scroll","tns-ng2-slides");
+		}
+	}
 	setActivePageIndicator(activeIndex: number) {
 		this.indicators.map((indicator: IIndicators, index: number) => {
 			if (index == activeIndex) {

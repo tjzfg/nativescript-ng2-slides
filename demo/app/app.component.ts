@@ -8,16 +8,16 @@ import * as platform from 'platform';
     templateUrl: "app.component.html",
 })
 export class AppComponent {
+    constructor(){
+        setTimeout(()=>this.nums=[8,6,4,2,1],5)
+    }
     pageWidth=platform.screen.mainScreen.widthDIPs;
     nums=[9,10];
     ngAfterViewInit(){
-        if(!this.scroll) return;
-        let _scroll:ScrollView=this.scroll.nativeElement;
-        _scroll.android.requestDisallowInterceptTouchEvent(false);
-        _scroll.on("pan",(args:PanGestureEventData)=>{
-            console.log("scrollView:"+args.state);
-        })
-        console.log("enabled scroll gesture");
+        
+    }
+    ngAfterContentChecked(){
+        
     }
     public counter: number = 16;
     @ViewChild("scroll") scroll;

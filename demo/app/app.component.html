@@ -1,21 +1,9 @@
 <ScrollView  [isUserInteractionEnabled]="false" #scroll>
     <GridLayout>
-<slides [loop]="true" pageHeight="{{pageWidth*0.6}}" [pageIndicators]="true" autoInterval="2000">
-    <slide class="slide-1">
-        <Image src="res://background" width="100%" ></Image>
-    </slide>
-    <slide class="slide-2">
-        <Label text="This is Panel 2"></Label>
-    </slide>
-    <slide class="slide-3">
-        <Label text="This is Panel 3"></Label>
-    </slide>
-    <slide *ngFor="let n of nums" class="slide-4">
-        <Label text="This is Panel {{n}}"></Label>
-    </slide>
-    <slide class="slide-5">
-        <Label text="This is Panel 5"></Label>
-    </slide>
-</slides>
+        <slides [loop]="true" pageHeight="{{pageWidth*0.6}}" [pageIndicators]="true" autoInterval="2000">
+            <slide *ngFor="let n of nums" class="slide-4">
+                <Label text="This is Panel {{n}}"></Label>
+            </slide>
+        </slides>
     </GridLayout>
 </ScrollView>
