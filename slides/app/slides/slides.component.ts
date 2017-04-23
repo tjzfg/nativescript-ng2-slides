@@ -17,6 +17,7 @@ import {ScrollView} from "ui/scroll-view";
 import {View} from "ui/core/view";
 import {PanResult} from "../PanResult";
 import "rxjs/add/operator/toPromise";
+import {ViewBase} from "tns-core-modules/ui/core/view-base";
 
 export interface IIndicators {
 	active: boolean;
@@ -110,7 +111,7 @@ export class SlidesComponent implements OnInit,OnDestroy{
 		this.slides.changes.subscribe(val => this.setupSlides());
 
 		//todo ugly hack
-		let view:View=this.el.nativeElement;
+		let view:ViewBase=this.el.nativeElement;
 		while(view.parent){
 			view=view.parent;
 			if(view instanceof ScrollView && view.orientation=="vertical"){
@@ -146,7 +147,7 @@ export class SlidesComponent implements OnInit,OnDestroy{
 		if (footerSection.ios) {
 			footerSection.clipToBounds = false;
 		    //footerSection.clipToBounds = false;
-		} else if (footerSection.android) {
+		} else if (footerSection.android && footerSection.android.getParent()) {
 			footerSection.android.getParent().setClipChildren(false);
 		}
 

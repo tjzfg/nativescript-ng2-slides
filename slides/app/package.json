@@ -29,7 +29,7 @@
     },
     "dependencies": {
         "nativescript-theme-core": "^0.2.1",
-        "nativescript-angular": "1.2.0",
+        "nativescript-angular": "1.5.2",
         "@angular/core": "2.2.1",
         "@angular/common": "2.2.1",
         "@angular/compiler": "2.2.1",
