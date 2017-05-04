@@ -154,7 +154,7 @@ export class SlidesComponent implements OnInit,OnDestroy{
 	}
 	setupSlides(){
 
-		if(this.slides||this.slides.length==0) return;
+		if(!this.slides||this.slides.length==0) return;
 		// loop through slides and setup height and widith
 
 		this.slides.forEach((slide: SlideComponent) => {
