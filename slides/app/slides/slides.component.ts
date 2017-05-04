@@ -17,7 +17,6 @@ import {ScrollView} from "ui/scroll-view";
 import {View} from "ui/core/view";
 import {PanResult} from "../PanResult";
 import "rxjs/add/operator/toPromise";
-import {ViewBase} from "tns-core-modules/ui/core/view-base";
 
 export interface IIndicators {
 	active: boolean;
@@ -60,7 +59,7 @@ enum cancellationReason {
 		.footer{
 			width:100%;
 			height:20%;
-			horizontal-align:center;
+			text-align:center;
 		}
 	`],
 	encapsulation: ViewEncapsulation.None
@@ -111,7 +110,7 @@ export class SlidesComponent implements OnInit,OnDestroy{
 		this.slides.changes.subscribe(val => this.setupSlides());
 
 		//todo ugly hack
-		let view:ViewBase=this.el.nativeElement;
+		let view:View=this.el.nativeElement;
 		while(view.parent){
 			view=view.parent;
 			if(view instanceof ScrollView && view.orientation=="vertical"){
@@ -122,13 +121,7 @@ export class SlidesComponent implements OnInit,OnDestroy{
 			}
 		}
 		this.setupSlides();
-		if(this.interval>0){
-			this._intervalFun=setInterval(()=>{
-				if(this.panResult.beginTime==0){
-					this.nextSlide()
-				}
-			},this.interval);
-		}
+
 	}
 
 	ngOnDestroy() {
@@ -160,7 +153,10 @@ export class SlidesComponent implements OnInit,OnDestroy{
 		}
 	}
 	setupSlides(){
+
+		if(this.slides||this.slides.length==0) return;
 		// loop through slides and setup height and widith
+
 		this.slides.forEach((slide: SlideComponent) => {
 			AbsoluteLayout.setLeft(slide.layout, this.pageWidth);
 			slide.slideWidth = this.pageWidth;
@@ -180,6 +176,13 @@ export class SlidesComponent implements OnInit,OnDestroy{
 		if(!this.scroll && this.currentSlide){
 			this.currentSlide.slide.layout.on('pan', this.onPan);
 			trace.write("slides is not layout in a vertical scroll","tns-ng2-slides");
+		}
+		if(!this._intervalFun && this.interval>0){
+			this._intervalFun=setInterval(()=>{
+				if(this.panResult.beginTime==0){
+					this.nextSlide()
+				}
+			},this.interval);
 		}
 	}
 	setActivePageIndicator(activeIndex: number) {
