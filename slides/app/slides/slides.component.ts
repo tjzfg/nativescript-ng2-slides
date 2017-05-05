@@ -12,7 +12,7 @@ import * as app from 'application';
 import { AbsoluteLayout } from 'ui/layouts/absolute-layout';
 import { StackLayout } from 'ui/layouts/stack-layout';
 import { Label } from 'ui/label';
-import trace=require("trace");
+import * as trace from "trace";
 import {ScrollView} from "ui/scroll-view";
 import {View} from "ui/core/view";
 import {PanResult} from "../PanResult";

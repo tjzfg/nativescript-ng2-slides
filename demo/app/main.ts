@@ -2,7 +2,7 @@
 import { platformNativeScriptDynamic } from "nativescript-angular/platform";
 
 import { AppModule } from "./app.module";
-import trace=require("trace");
+import * as trace from "trace";
 trace.enable();
 trace.addCategories("tns-ng2-slides");
 platformNativeScriptDynamic().bootstrapModule(AppModule);
