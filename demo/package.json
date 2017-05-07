@@ -4,38 +4,34 @@
   "readme": "NativeScript Application",
   "repository": "<fill-your-repository-here>",
   "nativescript": {
-    "id": "org.nativescript.demo",
+    "id": "org.nativescript.slides",
     "tns-ios": {
-      "version": "2.4.0"
-    },
-    "tns-android": {
-      "version": "2.5.0"
+      "version": "3.0.0"
     }
   },
   "dependencies": {
-    "@angular/common": "2.2.1",
-    "@angular/compiler": "2.2.1",
-    "@angular/core": "2.2.1",
-    "@angular/forms": "2.2.1",
-    "@angular/http": "2.2.1",
-    "@angular/platform-browser": "2.2.1",
-    "@angular/platform-browser-dynamic": "2.2.1",
-    "@angular/router": "3.2.1",
-    "nativescript-angular": "1.2.0",
-    "nativescript-ng2-slides": "file:///D:\\code\\nativescript-plugins\\nativescript-ng2-slides",
-    "nativescript-theme-core": "^0.2.1",
-    "reflect-metadata": "~0.1.8",
-    "rxjs": "5.0.0-beta.12",
-    "tns-core-modules": "2.4.2"
+    "@angular/animations": "^4.1.1",
+    "@angular/common": "^4.1.1",
+    "@angular/compiler": "^4.1.1",
+    "@angular/compiler-cli": "^4.1.1",
+    "@angular/core": "^4.1.1",
+    "@angular/forms": "^4.1.1",
+    "@angular/http": "^4.1.1",
+    "@angular/platform-browser": "^4.1.1",
+    "@angular/platform-browser-dynamic": "^4.1.1",
+    "@angular/platform-server": "^4.1.1",
+    "@angular/router": "^4.1.1",
+    "nativescript-angular": "^3.0.0",
+    "nativescript-ng2-slides": "file:///Users/zhangfagen/Documents/code/nativescript-ng2-slides",
+    "nativescript-theme-core": "^1.0.4",
+    "reflect-metadata": "^0.1.10",
+    "rxjs": "^5.3.1",
+    "tns-core-modules": "^3.0.0",
+    "zone.js": "^0.8.10"
   },
   "devDependencies": {
-    "babel-traverse": "6.4.5",
-    "babel-types": "6.4.5",
-    "babylon": "6.4.5",
-    "lazy": "1.0.11",
-    "nativescript-dev-android-snapshot": "^0.*.*",
-    "nativescript-dev-typescript": "^0.3.2",
-    "typescript": "~2.0.10",
-    "zone.js": "~0.6.21"
+    "nativescript-dev-android-snapshot": "0.0.9",
+    "nativescript-dev-typescript": "^0.4.2",
+    "typescript": "^2.2.2"
   }
 }

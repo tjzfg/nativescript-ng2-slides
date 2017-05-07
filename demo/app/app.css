@@ -35,7 +35,9 @@ Label{
   margin-top : 0;
   border-radius : 5;
 }
-
+.footer{
+  width:100%
+}
 .slide-indicator-active{
   background-color: #fff;
   opacity : 0.9;
