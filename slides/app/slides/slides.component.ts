@@ -123,7 +123,7 @@ export class SlidesComponent implements OnInit{
 		this.slides.changes.subscribe(val => this.setupSlides());
 
 		//todo ugly hack
-		let view:View=this.el.nativeElement;
+		let view=this.el.nativeElement;
 		while(view.parent){
 			view=view.parent;
 			if(view instanceof ScrollView && view.orientation=="vertical"){
