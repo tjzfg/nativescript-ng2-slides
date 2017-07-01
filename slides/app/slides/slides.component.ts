@@ -1,5 +1,5 @@
 import {
-	Component, OnInit, AfterViewInit, ViewEncapsulation, ChangeDetectorRef, OnDestroy, forwardRef, ViewChild,
+	Component, OnInit, AfterViewInit, ViewEncapsulation, ChangeDetectorRef, forwardRef, ViewChild,
 	ContentChildren, ElementRef, QueryList, Input, AfterViewChecked
 } from '@angular/core';
 
@@ -16,6 +16,7 @@ import * as trace from "trace";
 import {ScrollView} from "ui/scroll-view";
 import {View} from "ui/core/view";
 import {PanResult} from "../PanResult";
+import {Page} from "tns-core-modules/ui/page";
 import "rxjs/add/operator/toPromise";
 
 export interface IIndicators {
@@ -65,7 +66,7 @@ enum cancellationReason {
 	encapsulation: ViewEncapsulation.None
 })
 
-export class SlidesComponent implements OnInit,OnDestroy{
+export class SlidesComponent implements OnInit{
 	@ContentChildren(forwardRef(() => SlideComponent)) slides: QueryList<SlideComponent>;
 
 	@ViewChild('footer') footer: ElementRef;
@@ -91,8 +92,20 @@ export class SlidesComponent implements OnInit,OnDestroy{
 		return !!this.currentSlide && !!this.currentSlide.left;
 	}
 
-	constructor(private el:ElementRef,private ref: ChangeDetectorRef,private dete:ChangeDetectorRef) {
+	constructor(private el:ElementRef,
+				private ref: ChangeDetectorRef,
+				private page:Page,
+				private dete:ChangeDetectorRef) {
 		this.indicators = [];
+		this.page.on(Page.unloadedEvent, () => {
+			if(this._intervalFun) {
+				clearInterval(this._intervalFun);
+				this._intervalFun = null;
+			}
+		});
+		this.page.on(Page.loadedEvent, () => {
+			this.setupSlides();
+		});
 	}
 
 	ngOnInit() {
@@ -120,12 +133,7 @@ export class SlidesComponent implements OnInit,OnDestroy{
 				break;
 			}
 		}
-		this.setupSlides();
 
-	}
-
-	ngOnDestroy() {
-		if(this._intervalFun) clearInterval(this._intervalFun);
 	}
 
 	//footer stuff
