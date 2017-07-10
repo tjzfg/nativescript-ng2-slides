@@ -36,7 +36,6 @@
     "reflect-metadata": "~0.1.8",
     "rxjs": "~5.3.0",
     "tns-core-modules": "~3.1.0",
-
     "nativescript-dev-android-snapshot": "^0.*.*",
     "nativescript-dev-typescript": "~0.5.0",
     "typescript": "~2.2.1",
