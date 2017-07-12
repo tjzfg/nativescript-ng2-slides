@@ -47,12 +47,11 @@ enum cancellationReason {
 	template: `
 	<AbsoluteLayout>
 		<ng-content></ng-content>
-		<StackLayout *ngIf="pageIndicators" #footer orientation="horizontal" class="footer">
+		<StackLayout visibility="{{pageIndicators?'visible':'hidden'}}" #footer orientation="horizontal" class="footer">
 			<Label *ngFor="let indicator of indicators"
 				[class.slide-indicator-active]="indicator.active == true"
 				[class.slide-indicator-inactive]="indicator.active == false	"
 			></Label>
-
 		</StackLayout>
 	</AbsoluteLayout>
 	`,
@@ -61,6 +60,7 @@ enum cancellationReason {
 			width:100%;
 			height:20%;
 			text-align:center;
+			z-index:20;
 		}
 	`],
 	encapsulation: ViewEncapsulation.None
@@ -127,10 +127,12 @@ export class SlidesComponent implements OnInit{
 		while(view.parent){
 			view=view.parent;
 			if(view instanceof ScrollView && view.orientation=="vertical"){
-				this.scroll=view;
-				this.scroll.on('pan',this.onPan);
-				trace.write("slides is layout in a vertical scroll,found it","tns-ng2-slides");
-				break;
+				if(app.android){
+					this.scroll=view;
+					this.scroll.on('pan',this.onPan);
+					trace.write("slides is layout in a vertical scroll,found it","tns-ng2-slides");
+					break;
+				}
 			}
 		}
 
